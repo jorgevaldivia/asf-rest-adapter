@@ -183,6 +183,7 @@ module Salesforce
         end
         http = Net::HTTP.new(svr_url_4_http, @@ssl_port)
         http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE # jvsa@2011-08-23
         class_name = self.name.gsub(/\S+::/mi, "")
         path = "/services/data/#{api_version}/sobjects/#{class_name}/#{id}"
         code = serialized_data_json
