@@ -24,12 +24,12 @@ module Authenticate
       # Initializes the adapter, using username, password. A good place to invoke
       # it includes 'setup()' method in the 'test_helper' and Rails init files.
       # usage ->     bootup_rest_adapter(username, password, api_version)
-      def bootup_rest_adapter(username, password, api_version, url) # jvsa@2011-08-24 A Added url param to support sandbox 
+      def bootup_rest_adapter(username, password, api_version, url)
         p "*" * 80
         p 'Set up code'
 
-        #login_svr = 'https://login.salesforce.com'
-        login_svr = url ? url : 'https://login.salesforce.com' # jvsa@2011-08-24 A Support sandbox 
+        login_svr = url ? url : 'https://login.salesforce.com'
+        #login_svr = 'https://test.salesforce.com' # jvsa
         api_version = api_version ? api_version : '21.0'
 
         uri = URI.parse(login_svr)
@@ -70,7 +70,7 @@ module Authenticate
           #setup the default adapter with relevant auth schema (username/password) or (Omniauth)
           case auth_scheme
           when "username_password" then
-            puts 'Setting up adapter using username/password'
+              puts 'Setting up adapter using username/password'
             username = asf_rest_config["asf-rest-config"]["username"]
             password = asf_rest_config["asf-rest-config"]["password"]
             login_svr = asf_rest_config["asf-rest-config"]["url"].to_s
@@ -81,14 +81,12 @@ module Authenticate
             puts "Password: " + password
             puts "API Version " + login_svr
 
-            # jvsa@2011-08-24 A Added login_svr param to support sandbox 
             security_token, rest_svr, rest_version = Salesforce::Rest::AsfRest.bootup_rest_adapter(username, password, api_version, login_svr)
-            
             puts 'Security Token: ' + security_token
             puts 'rest_svr: ' + rest_svr
             puts 'rest_version: ' + rest_version
           when"omni_auth" then
-            consumer_key = asf_rest_config["asf-rest-config"]["consumer_key"]
+              consumer_key = asf_rest_config["asf-rest-config"]["consumer_key"]
             consumer_secret = asf_rest_config["asf-rest-config"]["consumer_secret"]
 
             puts "Salesforce consumer_key is:" + consumer_key.to_s

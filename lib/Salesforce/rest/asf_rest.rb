@@ -23,25 +23,37 @@ require 'rforce'
 module Salesforce
   module Rest
     # This is the mother class of all Salesforce REST objects
-    # In Force.com REST, there is no 's' at the end of SObjects
+    # all subclasses need to set the collection name. In ActiveResource convention,
+    # pluralized elements has the ending 's'; whereas, in Force.com REST, that 's'
+    # is not there.
     # e.g.
     # set_collection_name "User"
-    class AsfRest
+    #
+    # TODO cannot do "SObject.find(:all)" due to a defect in the ActiveResource framework,
+    # see -> ActiveResource::Base line # 885
+    #  def instantiate_collection(collection, prefix_options = {})
+    #        collection.collect! { |record| instantiate_record(record, prefix_options) }
+    #  end
+    # As Ruby Hash has not collect! method, only Array,
+    # We we get back from Salesforce is a hash
+    # <sobject><objectDescribe><.....></objectDescribe><recentItems>...</recentItems></sobject>
+    class AsfRest < ActiveResource::Base
       include HTTParty
 
       # default REST API server for HTTParty
       base_uri "https://na7.salesforce.com"
+      #base_uri "https://cs7.salesforce.com" # jvsa
       default_params :output => 'json'
       format :json
-      @@ssl_port = 443
+      @@ssl_port = 443  
+
+      #ActiveResource setting
+      self.site = "https://na7.salesforce.com/services/data/v21.0/sobjects"
+      #self.site = "https://cs7.salesforce.com/services/data/v21.0/sobjects" # jvsa
 
       # set header for httparty
       def self.set_headers (auth_setting)
         headers (auth_setting)
-      end
-
-      def self.set_collection_name(name)
-        @collection_name = name
       end
 
       # Loading the Authenticate module
@@ -79,8 +91,9 @@ module Salesforce
         @@ssl_port = 443  # TODO, right SF use port 443 for all HTTPS traffic.
 
         #ActiveResource setting
-        #connection.set_header("Authorization", "OAuth " + @@oauth_token)
-        #self.format = :json
+        #self.site = "https://" +  @@rest_svr_url
+        self.site = @@rest_svr_url
+        connection.set_header("Authorization", "OAuth " + @@oauth_token)
 
         # To be used by HTTParty
         @@auth_header = {
@@ -89,6 +102,7 @@ module Salesforce
         }
         # either application/xml or application/json
         base_uri rest_svr
+        self.format = :json
 
         return self
       end
@@ -269,6 +283,19 @@ module Salesforce
         return resp
       end
 
+      # Used for removing the .xml and .json extensions at the end of the URL link.
+      class << self
+        # removing http://....../UID.xml
+        def element_path(id, prefix_options = {}, query_options = nil)
+          prefix_options, query_options = split_options(prefix_options) if query_options.nil?
+          "#{prefix(prefix_options)}#{collection_name}/#{id}#{query_string(query_options)}"
+        end
+        # removing http://....../UID.json
+        def collection_path(prefix_options = {}, query_options = nil)
+          prefix_options, query_options = split_options(prefix_options) if query_options.nil?
+          "#{prefix(prefix_options)}#{collection_name}#{query_string(query_options)}"
+        end
+      end
     end
   end
 end
