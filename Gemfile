@@ -6,7 +6,7 @@ source "http://rubygems.org"
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
 gem "rforce"
-gem "oauth2", "~> 0.7.1"
+gem "oauth2", ">= 0.7.1"
 gem "omniauth"
 
 group :development do
